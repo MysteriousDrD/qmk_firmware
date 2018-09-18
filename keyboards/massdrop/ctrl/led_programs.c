@@ -99,6 +99,21 @@ led_setup_t leds_rainbow_s[] = {
     { .end = 1 },
 };
 
+//Ireland
+led_setup_t leds_rainbow_irl_ns[] = {
+    { .hs = 0,      .he = 33.33,     .rs = 0,     .re = 0,     .gs = 255,   .ge = 255, .bs = 0,   .be = 0,   .ef = EF_OVER },
+    { .hs = 33.33,  .he = 66.67,     .rs = 255,   .re = 255,   .gs = 255,   .ge = 255, .bs = 255, .be = 255, .ef = EF_OVER },
+    { .hs = 66.67,  .he = 100,  .rs = 255, .re = 255, .gs = 100,   .ge = 100, .bs = 0,   .be = 0,   .ef = EF_OVER },
+    { .end = 1 },
+};
+
+led_setup_t leds_rainbow_irl_s[] = {
+    { .hs = 0,      .he = 33.33,     .rs = 0,     .re = 0,     .gs = 255,   .ge = 255, .bs = 0,   .be = 0,   .ef = EF_OVER | EF_SCR_R },
+    { .hs = 33.33,  .he = 66.67,     .rs = 255,   .re = 255,   .gs = 255,   .ge = 255, .bs = 255, .be = 255, .ef = EF_OVER | EF_SCR_R },
+    { .hs = 66.67,  .he = 100,  .rs = 255, .re = 255, .gs = 100,   .ge = 100, .bs = 0,   .be = 0,   .ef = EF_OVER | EF_SCR_R },
+    { .end = 1 },
+};
+
 //Add new LED animations here using one from above as example
 //The last entry must be { .end = 1 }
 //Add the new animation name to the list below following its format
@@ -106,6 +121,8 @@ led_setup_t leds_rainbow_s[] = {
 void *led_setups[] = {
     leds_rainbow_s,
     leds_rainbow_ns,
+    leds_rainbow_irl_ns,
+    leds_rainbow_irl_s,
     leds_teal_salmon,
     leds_yellow,
     leds_red,
