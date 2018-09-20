@@ -360,19 +360,65 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
 
     // the scan point to the left of this position
     uint8_t r_scan = scan;
+    // the scan point to the right of this position
+    uint8_t l_scan = scan;
     // if we're on the higher row of wiring (basically the right)
     // side of the keyboard, we need to jump down a row
-    if(scan % 15 == 0 && scan >= 90) {
-        r_scan -= 83;
-    } else if(scan % 15 != 0) {
-        r_scan -= 1;
-    } // the remaining case here would be on the left most position,
-    // in which case we just do nothing.
+    switch(scan) {
+      case 154: // left arrow key -> ctrl
+        r_scan = 82;
+        break;
+      case 82: // ctrl -> left arrow key
+        l_scan = 154;
+        break;
+      case 140: // up arrow -> shift
+        r_scan = 153;
+        break;
+      case 153: // shift -> up arrow
+        l_scan = 140;
+        break;
+      case 112: // home -> pgup
+       l_scan = 142;
+       break;
+      case 142: // pgup -> home
+        r_scan = 112;
+        break;
+      case 127: // end -> pgdn
+        l_scan = 141;
+        break;
+      case 141: // pgdn -> end
+        r_scan = 127;
+        break;
+      default:
+        // if we're on the higher row of wiring (basically the right)
+        // side of the keyboard, we need to jump down a row
+
+        if(scan % 15 == 0 && scan >= 90) {
+            r_scan -= 83;
+        }
+        else if(scan % 15 != 0) {
+            r_scan -= 1;
+            l_scan += 1;
+        }
+        else{ // the remaining case here would be on the left most position so we jump up a row,
+
+        }
+      }
 
     // get your neighbours interpolation
     float r_value = desired_interpolation[read_buffer][r_scan];
+    float l_value = desired_interpolation[read_buffer][l_scan];
     // now fill yourself up
     value = max(r_value * 0.85f, value);
+    // calculate a new interpolation step
+    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+
+    // Act on LED
+    rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
+    rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
+    rgb_out[2] = (f[0].bs) + value * (f[0].be - f[0].bs);
+
+    value = max(l_value * 0.85f, value);
     // calculate a new interpolation step
     desired_interpolation[write_buffer][scan] = value - 0.15f * value;
 
