@@ -107,6 +107,11 @@ led_setup_t leds_rainbow_irl_ns[] = {
     { .end = 1 },
 };
 
+led_setup_t leds_purple[] = {
+  { .hs = 0,  .he = 100,  .rs = 150,   .re = 150, .gs = 0,   .ge = 0,   .bs = 255, .be = 255, .ef = EF_NONE },
+  { .end = 1 },
+};
+
 led_setup_t leds_rainbow_irl_s[] = {
     { .hs = 0,      .he = 33.33,     .rs = 0,     .re = 0,     .gs = 255,   .ge = 255, .bs = 0,   .be = 0,   .ef = EF_OVER | EF_SCR_R },
     { .hs = 33.33,  .he = 66.67,     .rs = 255,   .re = 255,   .gs = 255,   .ge = 255, .bs = 255, .be = 255, .ef = EF_OVER | EF_SCR_R },
@@ -133,6 +138,7 @@ led_setup_t led_reactive_salmon_teal[] = {
 //Add the new animation name to the list below following its format
 
 void *led_setups[] = {
+    leds_purple,
     leds_rainbow_s,
     leds_rainbow_ns,
     leds_rainbow_irl_ns,
