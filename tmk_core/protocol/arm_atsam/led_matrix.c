@@ -304,7 +304,32 @@ void led_gradient_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, f
 
         //Add in any color effects
         float value = desired_brightness[scan];
-        if (f[fcur].ef & EF_OVER)
+
+        //handle keypress fade unique cases
+        if(f[fcur].ef & EF_PRESS)
+        {
+          desired_brightness[scan] -= led_keypress_fade_speed  * value;
+
+          if(f[fcur].ef & EF_SUBTRACT) {
+              rgb_out[0] -= ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
+              rgb_out[1] -= ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
+              rgb_out[2] -= ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
+          }
+          else if (f[fcur].ef & EF_OVER && value > 0.25f)
+          {
+              rgb_out[0] = ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
+              rgb_out[1] = ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
+              rgb_out[2] = ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
+          }
+          else
+          {
+              rgb_out[0] += ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
+              rgb_out[1] += ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
+              rgb_out[2] += ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
+          }
+        }
+        // normal default effects
+        else if (f[fcur].ef & EF_OVER)
         {
             rgb_out[0] = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
             rgb_out[1] = (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
@@ -315,26 +340,6 @@ void led_gradient_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, f
             rgb_out[0] -= (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
             rgb_out[1] -= (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
             rgb_out[2] -= (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
-        }
-        else if (f[fcur].ef & EF_PRESS)
-        {
-          desired_brightness[scan] -= led_keypress_fade_speed  * value;
-          rgb_out[0] += ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
-          rgb_out[1] += ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
-          rgb_out[2] += ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
-        }
-        else if (f[fcur].ef & EF_PRESS & EF_SUBTRACT)
-        {
-          desired_brightness[scan] -= led_keypress_fade_speed  * value;
-          rgb_out[0] -= ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
-          rgb_out[1] -= ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
-          rgb_out[2] -= ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
-        }
-        else if (f[fcur].ef & EF_PRESS & EF_OVER && value > 0.25f)
-        {
-            rgb_out[0] = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
-            rgb_out[1] = (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
-            rgb_out[2] = (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
         }
         else
         {
