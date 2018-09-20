@@ -1,16 +1,13 @@
 /*
 Copyright 2018 Massdrop Inc.
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -256,24 +253,20 @@ uint8_t led_lighting_mode;
 issi3733_led_t *led_cur;
 uint8_t led_per_run = 15;
 float breathe_mult;
+uint8_t led_anim_mode = 0;
 
-void led_run_pattern(led_setup_t *f, float* ro, float* go, float* bo) {
-    float px;
+// this has far more entries than it needs, but it's far easier to linearize
+// that way. The higest scan code seems to be 156 as seen in config_led.h
+// edit: this is now a double buffer to allow for some lookup trickery on fixed
+// timed steps.
+float desired_interpolation[][157] = {{0}, {0}};
+uint8_t write_buffer = 0;
+uint8_t read_buffer = 1;
 
-    uint8_t fcur = 0;
-    uint8_t fmax = 0;
-
-    //Frames setup
-    while (f[fcur].end != 1)
-    {
-        fcur++; //Count frames
-    }
-
-    fmax = fcur; //Store total frames count
-
+void led_gradient_op(uint8_t fcur, uint8_t fmax, led_setup_t *f, float* rgb_out) {
     for (fcur = 0; fcur < fmax; fcur++)
     {
-        px = led_cur->px;
+        float px = led_cur->px;
         float pxmod;
         pxmod = (float)(disp.frame % (uint32_t)(1000.0f / led_animation_speed)) / 10.0f * led_animation_speed;
 
@@ -281,7 +274,7 @@ void led_run_pattern(led_setup_t *f, float* ro, float* go, float* bo) {
         if ((!led_animation_direction && f[fcur].ef & EF_SCR_R) || (led_animation_direction && (f[fcur].ef & EF_SCR_L)))
         {
             pxmod *= 100.0f;
-            pxmod = (uint32_t)pxmod % 10000;
+            pxmod = (uint32_t) pxmod % 10000;
             pxmod /= 100.0f;
 
             px -= pxmod;
@@ -292,7 +285,7 @@ void led_run_pattern(led_setup_t *f, float* ro, float* go, float* bo) {
         else if ((!led_animation_direction && f[fcur].ef & EF_SCR_L) || (led_animation_direction && (f[fcur].ef & EF_SCR_R)))
         {
             pxmod *= 100.0f;
-            pxmod = (uint32_t)pxmod % 10000;
+            pxmod = (uint32_t) pxmod % 10000;
             pxmod /= 100.0f;
             px += pxmod;
 
@@ -311,27 +304,56 @@ void led_run_pattern(led_setup_t *f, float* ro, float* go, float* bo) {
         //Add in any color effects
         if (f[fcur].ef & EF_OVER)
         {
-            *ro = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
-            *go = (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
-            *bo = (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
+            rgb_out[0] = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
+            rgb_out[1] = (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
+            rgb_out[2] = (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
         }
         else if (f[fcur].ef & EF_SUBTRACT)
         {
-            *ro -= (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
-            *go -= (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
-            *bo -= (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
+            rgb_out[0] -= (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
+            rgb_out[1] -= (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
+            rgb_out[2] -= (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
         }
         else
         {
-            *ro += (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
-            *go += (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
-            *bo += (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
+            rgb_out[0] += (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
+            rgb_out[1] += (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
+            rgb_out[2] += (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
         }
     }
 }
 
-__attribute__((weak))
-led_instruction_t led_instructions[] = { { .end = 1 } };
+void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, float* rgb_out) {
+    // currently maps onto escape, might be useful to just map
+    // it onto its own place or something :shrug:
+    if(scan == 255) {
+        scan = 0;
+    }
+    float value = desired_interpolation[read_buffer][scan];
+
+    // the scan point to the left of this position
+    uint8_t r_scan = scan;
+    // if we're on the higher row of wiring (basically the right)
+    // side of the keyboard, we need to jump down a row
+    if(scan % 15 == 0 && scan >= 90) {
+        r_scan -= 83;
+    } else if(scan % 15 != 0) {
+        r_scan -= 1;
+    } // the remaining case here would be on the left most position,
+    // in which case we just do nothing.
+
+    // get your neighbours interpolation
+    float r_value = desired_interpolation[read_buffer][r_scan];
+    // now fill yourself up
+    value = max(r_value * 0.85f, value);
+    // calculate a new interpolation step
+    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+
+    // Act on LED
+    rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
+    rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
+    rgb_out[2] = (f[0].bs) + value * (f[0].be - f[0].bs);
+}
 
 void led_matrix_run(led_setup_t *f)
 {
@@ -362,15 +384,26 @@ void led_matrix_run(led_setup_t *f)
             if (breathe_mult > 1) breathe_mult = 1;
             else if (breathe_mult < 0) breathe_mult = 0;
         }
+        // we only buffer swap occasionally, to make animations look not so
+        // instantanously
+        if(disp.frame % 5 == 0) {
+          // buffer swap when we render a new frame (and only then!)
+          uint8_t temp = write_buffer;
+          write_buffer = read_buffer;
+          read_buffer = temp;
+        }
     }
 
-    uint8_t highest_active_layer = 0;
-    uint32_t temp_layer_state = layer_state;
+    uint8_t fcur = 0;
+    uint8_t fmax = 0;
 
-    while (temp_layer_state >> 1 != 0) {
-        highest_active_layer++;
-        temp_layer_state = temp_layer_state >> 1;
+    //Frames setup
+    while (f[fcur].end != 1)
+    {
+        fcur++; //Count frames
     }
+
+    fmax = fcur; //Store total frames count
 
     while (led_cur < lede && led_this_run < led_per_run)
     {
@@ -392,72 +425,15 @@ void led_matrix_run(led_setup_t *f)
         }
         else
         {
-            led_instruction_t *led_cur_instruction;
-            led_cur_instruction = led_instructions;
-
-            //Act on LED
-            if (led_cur_instruction->end) {
-                // If no instructions, use normal pattern
-                led_run_pattern(f, &ro, &go, &bo);
+            float res[3] = {0, 0, 0};
+            if(led_anim_mode) {
+              led_gradient_op(fcur, fmax, f, res);
             } else {
-                uint8_t skip;
-
-                while (!led_cur_instruction->end) {
-                    skip = 0;
-
-                    if (led_cur_instruction->flags & LED_FLAG_MATCH_ID) {
-                        if (
-                            led_cur_instruction->id0 == 0 &&
-                            led_cur_instruction->id1 == 0 &&
-                            led_cur_instruction->id2 == 0 &&
-                            led_cur_instruction->id3 == 0 &&
-                            led_cur->id == 0
-                        ) {
-                            //
-                        } else if (
-                            (0 <= led_cur->id && led_cur->id <= 31) &&
-                            (~led_cur_instruction->id0 & ((uint32_t) 1UL << led_cur->id))
-                        ) {
-                            skip = 1;
-                        } else if (
-                            (32 <= led_cur->id && led_cur->id <= 63) &&
-                            (~led_cur_instruction->id1 & ((uint32_t) 1UL << (led_cur->id - 32)))
-                        ) {
-                            skip = 1;
-                        } else if (
-                            (64 <= led_cur->id && led_cur->id <= 95) &&
-                            (~led_cur_instruction->id2 & ((uint32_t) 1UL << (led_cur->id - 64)))
-                        ) {
-                            skip = 1;
-                        } else if (
-                            (96 <= led_cur->id && led_cur->id <= 127) &&
-                            (~led_cur_instruction->id3 & ((uint32_t) 1UL << (led_cur->id - 96)))
-                        ) {
-                            skip = 1;
-                        }
-                    }
-
-                    if (led_cur_instruction->flags & LED_FLAG_MATCH_LAYER) {
-                        if (led_cur_instruction->layer != highest_active_layer) {
-                            skip = 1;
-                        }
-                    }
-
-                    if (!skip) {
-                        if (led_cur_instruction->flags & LED_FLAG_USE_RGB) {
-                            ro = led_cur_instruction->r;
-                            go = led_cur_instruction->g;
-                            bo = led_cur_instruction->b;
-                        } else if (led_cur_instruction->flags & LED_FLAG_USE_PATTERN) {
-                            led_run_pattern(led_setups[led_cur_instruction->pattern_id], &ro, &go, &bo);
-                        } else if (led_cur_instruction->flags & LED_FLAG_USE_ROTATE_PATTERN) {
-                            led_run_pattern(f, &ro, &go, &bo);
-                        }
-                    }
-
-                    led_cur_instruction++;
-                }
+              led_react_op(fcur, fmax, led_cur->scan, f, res);
             }
+            ro = res[0];
+            go = res[1];
+            bo = res[2];
         }
 
         //Clamp values 0-255
@@ -586,4 +562,3 @@ void led_matrix_task(void)
         //m15_on; //debug profiling
     }
 }
-

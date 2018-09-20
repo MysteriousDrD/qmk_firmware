@@ -98,6 +98,7 @@ uint8_t led_matrix_init(void);
 #define EF_SCR_L        0x00000002  //Scroll left
 #define EF_SCR_R        0x00000004  //Scroll right
 #define EF_SUBTRACT     0x00000008  //Subtract color values
+#define EF_REACT        0xF0000000  //Reactive hacked into the existing presets
 
 typedef struct led_setup_s {
   float hs;         //Band begin at percent
@@ -112,34 +113,19 @@ typedef struct led_setup_s {
   uint8_t end;      //Set to signal end of the setup
 } led_setup_t;
 
-//LED Extra Instructions
-#define LED_FLAG_NULL                0x00
-#define LED_FLAG_MATCH_ID            0x01
-#define LED_FLAG_MATCH_LAYER         0x02
-#define LED_FLAG_USE_RGB             0x10
-#define LED_FLAG_USE_PATTERN         0x20
-#define LED_FLAG_USE_ROTATE_PATTERN  0x40
-
-typedef struct led_instruction_s {
-    uint16_t flags; // Bitfield for LED instructions
-    uint32_t id0; // Bitwise id, IDs 0-31
-    uint32_t id1; // Bitwise id, IDs 32-63
-    uint32_t id2; // Bitwise id, IDs 64-95
-    uint32_t id3; // Bitwise id, IDs 96-127
-    uint8_t layer;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t pattern_id;
-    uint8_t end;
-} led_instruction_t;
-
 extern issi3733_driver_t issidrv[ISSI3733_DRIVER_COUNT];
 
 extern uint8_t gcr_desired;
 extern uint8_t gcr_breathe;
 extern uint8_t gcr_actual;
 extern uint8_t gcr_actual_last;
+
+extern uint8_t write_buffer;
+extern uint8_t read_buffer;
+extern float desired_interpolation[][157];
+extern uint8_t led_anim_mode;
+
+extern issi3733_led_t led_map[];
 
 extern uint8_t led_animation_id;
 extern uint8_t led_enabled;
@@ -152,9 +138,6 @@ extern uint8_t breathe_dir;
 extern const uint8_t led_setups_count;
 
 extern void *led_setups[];
-extern led_instruction_t led_instructions[];
-
-extern uint32_t layer_state;
 
 extern issi3733_led_t *led_cur;
 extern issi3733_led_t *lede;
