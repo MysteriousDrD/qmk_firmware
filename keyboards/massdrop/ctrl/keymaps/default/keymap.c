@@ -1,6 +1,6 @@
 #include QMK_KEYBOARD_H
 
-enum ctrl_keycodes {
+enum alt67_keycodes {
     L_BRI = SAFE_RANGE, //LED Brightness Increase
     L_BRD,              //LED Brightness Decrease
     L_PTN,              //LED Pattern Select Next
@@ -13,12 +13,13 @@ enum ctrl_keycodes {
     L_OFF,              //LED Off
     L_T_BR,             //LED Toggle Breath Effect
     L_T_PTD,            //LED Toggle Scrolling Pattern Direction
+    L_MODE,             //LED change mode
     U_T_AUTO,           //USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,           //USB Toggle Automatic GCR control
     DBG_TOG,            //DEBUG Toggle On / Off
     DBG_MTRX,           //DEBUG Toggle Matrix Prints
     DBG_KBD,            //DEBUG Toggle Keyboard Prints
-    DBG_MOU,            //DEBUG Toggle Mouse Prints
+    DBG_MOU            //DEBUG Toggle Mouse Prints
 };
 
 #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
@@ -35,19 +36,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL, KC_LGUI, KC_LALT,                  KC_SPC,                              KC_RALT, MO(1),   KC_APP,  KC_RCTL,            KC_LEFT, KC_DOWN, KC_RGHT \
     ),
     [1] = LAYOUT(
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_MUTE, KC_TRNS, KC_TRNS, \
+        DBG_TOG, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_MUTE, KC_TRNS, KC_TRNS, \
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_MPLY, KC_MSTP, KC_VOLU, \
         L_T_BR,  L_PSD,   L_BRI,   L_PSI,   KC_TRNS, KC_TRNS, KC_TRNS, U_T_AUTO,U_T_AGCR,KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_MPRV, KC_MNXT, KC_VOLD, \
         L_T_PTD, L_PTP,   L_BRD,   L_PTN,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, L_T_MD,  L_T_ONF, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, MO(2),                              KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS, KC_TRNS, KC_TRNS \
-    ),
-    [2] = LAYOUT(
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                              KC_TRNS, \
+        KC_TRNS, L_T_MD,  L_T_ONF, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, L_MODE,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                              KC_TRNS, \
         KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS, KC_TRNS, KC_TRNS \
     ),
     /*
@@ -66,6 +59,20 @@ const uint16_t PROGMEM fn_actions[] = {
 
 };
 
+uint32_t lfsr113_Bits (void) {
+   static uint32_t z1 = 51358, z2 = 12858, z3 = 98731, z4 = 38645;
+   uint32_t b;
+   b  = ((z1 << 6) ^ z1) >> 13;
+   z1 = ((z1 & 4294967294U) << 18) ^ b;
+   b  = ((z2 << 2) ^ z2) >> 27;
+   z2 = ((z2 & 4294967288U) << 2) ^ b;
+   b  = ((z3 << 13) ^ z3) >> 21;
+   z3 = ((z3 & 4294967280U) << 7) ^ b;
+   b  = ((z4 << 3) ^ z4) >> 12;
+   z4 = ((z4 & 4294967168U) << 13) ^ b;
+   return (z1 ^ z2 ^ z3 ^ z4);
+}
+
 // Runs just one time when the keyboard initializes.
 void matrix_init_user(void) {
 };
@@ -79,6 +86,30 @@ void matrix_scan_user(void) {
 #define MODS_ALT  (keyboard_report->mods & MOD_BIT(KC_LALT) || keyboard_report->mods & MOD_BIT(KC_RALT))
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if(record->event.pressed) {
+        // don't do funny business on the locking keys, since they already light
+        // differently when held and it's not destinguishable anymore what they
+        // do.
+        if(keycode != KC_CAPS && keycode != KC_SLCK) {
+            uint16_t scan_code = record->event.key.row * 15 + record->event.key.col;
+            // we can just modify the read_buffer, since the LEDs are set
+            // from read buffer and the led job then fills the write buffer.
+            desired_interpolation[read_buffer][scan_code] = 1.0f;
+            desired_interpolation[write_buffer][scan_code] = 1.0f;
+            if(debug_enable) {
+                dpf("kc=%d | sc=%d\r\n", keycode, scan_code);
+            }
+            /*
+            uint32_t r = lfsr113_Bits();
+            // reinterpret the uint32 as an uint32, which allows us to acces bits directly
+            uint8_t *randomness = (uint8_t *)&r;
+            uint16_t scan_color = scan_code * 3;
+            target_color[scan_color] = randomness[3];
+            target_color[scan_color + 1] = randomness[2];
+            target_color[scan_color + 2] = randomness[1];
+            */
+        }
+    }
     switch (keycode) {
         case L_BRI:
             if (record->event.pressed) {
@@ -152,6 +183,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             return false;
+        case L_MODE:
+            if(record->event.pressed) {
+               led_anim_mode = led_anim_mode ? 0 : 1;
+            }
+            return false;
         case L_T_PTD:
             if (record->event.pressed) {
                 led_animation_direction = !led_animation_direction;
@@ -209,15 +245,3 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return true; //Process all other keycodes normally
     }
 }
-
-led_instruction_t led_instructions[] = {
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_RGB, .id0 = 10, .id1 = 9, .r = 255, .g = 0, .b = 0 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_PATTERN, .id0 = 4, .id1 = 0, .pattern_id = 8 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_RGB, .id0 = 8, .id1 = 0, .r = 0, .g = 255, .b = 0 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_PATTERN, .id = 16, .id1 = 0, .pattern_id = 9 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_RGB, .id0 = 32, .id1 = 0, .r = 0, .g = 0, .b = 255 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_USE_ROTATE_PATTERN, .id0 = 64, .id1 = 0},
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_MATCH_LAYER | LED_FLAG_USE_ROTATE_PATTERN, .id0 = 262144, .id1 = 0, .layer = 0 },
-    // { .flags = LED_FLAG_MATCH_ID | LED_FLAG_MATCH_LAYER | LED_FLAG_USE_ROTATE_PATTERN, .id = 16777216, .id1 = 0, .layer = 1 },
-    { .end = 1 }
-};
