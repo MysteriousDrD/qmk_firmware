@@ -98,6 +98,7 @@ uint8_t led_matrix_init(void);
 #define EF_SCR_L        0x00000002  //Scroll left
 #define EF_SCR_R        0x00000004  //Scroll right
 #define EF_SUBTRACT     0x00000008  //Subtract color values
+#define EF_PRESS        0x00000010  //Render on key press
 #define EF_REACT        0xF0000000  //Reactive hacked into the existing presets
 
 typedef struct led_setup_s {
@@ -123,6 +124,7 @@ extern uint8_t gcr_actual_last;
 extern uint8_t write_buffer;
 extern uint8_t read_buffer;
 extern float desired_interpolation[][157];
+extern float desired_brightness[];
 extern uint8_t led_anim_mode;
 
 extern issi3733_led_t led_map[];
@@ -130,6 +132,7 @@ extern issi3733_led_t led_map[];
 extern uint8_t led_animation_id;
 extern uint8_t led_enabled;
 extern float led_animation_speed;
+extern float led_keypress_fade_speed;
 extern uint8_t led_lighting_mode;
 extern uint8_t led_animation_direction;
 extern uint8_t led_animation_breathing;

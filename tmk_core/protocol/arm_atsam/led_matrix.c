@@ -240,6 +240,7 @@ void led_matrix_prepare(void)
 
 uint8_t led_enabled;
 float led_animation_speed;
+float led_keypress_fade_speed;
 uint8_t led_animation_direction;
 uint8_t led_animation_breathing;
 uint8_t led_animation_breathe_cur;
@@ -253,17 +254,18 @@ uint8_t led_lighting_mode;
 issi3733_led_t *led_cur;
 uint8_t led_per_run = 15;
 float breathe_mult;
-uint8_t led_anim_mode = 0;
+uint8_t led_anim_mode = 1;
 
 // this has far more entries than it needs, but it's far easier to linearize
 // that way. The higest scan code seems to be 156 as seen in config_led.h
 // edit: this is now a double buffer to allow for some lookup trickery on fixed
 // timed steps.
 float desired_interpolation[][157] = {{0}, {0}};
+float desired_brightness[157] = {0};
 uint8_t write_buffer = 0;
 uint8_t read_buffer = 1;
 
-void led_gradient_op(uint8_t fcur, uint8_t fmax, led_setup_t *f, float* rgb_out) {
+void led_gradient_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, float* rgb_out) {
     for (fcur = 0; fcur < fmax; fcur++)
     {
         float px = led_cur->px;
@@ -297,11 +299,11 @@ void led_gradient_op(uint8_t fcur, uint8_t fmax, led_setup_t *f, float* rgb_out)
         if (px < f[fcur].hs) continue;
         if (px > f[fcur].he) continue;
         //note: < 0 or > 100 continue
-
         //Calculate the px within the start-stop percentage for color blending
         px = (px - f[fcur].hs) / (f[fcur].he - f[fcur].hs);
 
         //Add in any color effects
+        float value = desired_brightness[scan];
         if (f[fcur].ef & EF_OVER)
         {
             rgb_out[0] = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
@@ -313,6 +315,26 @@ void led_gradient_op(uint8_t fcur, uint8_t fmax, led_setup_t *f, float* rgb_out)
             rgb_out[0] -= (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
             rgb_out[1] -= (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
             rgb_out[2] -= (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
+        }
+        else if (f[fcur].ef & EF_PRESS)
+        {
+          desired_brightness[scan] -= led_keypress_fade_speed  * value;
+          rgb_out[0] += ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
+          rgb_out[1] += ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
+          rgb_out[2] += ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
+        }
+        else if (f[fcur].ef & EF_PRESS & EF_SUBTRACT)
+        {
+          desired_brightness[scan] -= led_keypress_fade_speed  * value;
+          rgb_out[0] -= ((px * (f[fcur].re - f[fcur].rs) + f[fcur].rs) * value);// + 0.5;
+          rgb_out[1] -= ((px * (f[fcur].ge - f[fcur].gs) + f[fcur].gs) * value);// + 0.5;
+          rgb_out[2] -= ((px * (f[fcur].be - f[fcur].bs) + f[fcur].bs) * value);// + 0.5;
+        }
+        else if (f[fcur].ef & EF_PRESS & EF_OVER && value > 0.25f)
+        {
+            rgb_out[0] = (px * (f[fcur].re - f[fcur].rs)) + f[fcur].rs;// + 0.5;
+            rgb_out[1] = (px * (f[fcur].ge - f[fcur].gs)) + f[fcur].gs;// + 0.5;
+            rgb_out[2] = (px * (f[fcur].be - f[fcur].bs)) + f[fcur].bs;// + 0.5;
         }
         else
         {
@@ -427,7 +449,7 @@ void led_matrix_run(led_setup_t *f)
         {
             float res[3] = {0, 0, 0};
             if(led_anim_mode) {
-              led_gradient_op(fcur, fmax, f, res);
+              led_gradient_op(fcur, fmax, led_cur->scan, f, res);
             } else {
               led_react_op(fcur, fmax, led_cur->scan, f, res);
             }
@@ -509,6 +531,7 @@ uint8_t led_matrix_init(void)
     led_animation_breathe_cur = BREATHE_MIN_STEP;
     breathe_step = 1;
     breathe_dir = 1;
+    led_keypress_fade_speed = 0.0300f;
 
     gcr_min_counter = 0;
     v_5v_cat_hit = 0;

@@ -16,6 +16,8 @@ enum alt67_keycodes {
     L_MODE,             //LED change mode
     U_T_AUTO,           //USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,           //USB Toggle Automatic GCR control
+    L_KFSI,             // LED keypress fade increase
+    L_KFSD,             // LED keypress fade decrease
     DBG_TOG,            //DEBUG Toggle On / Off
     DBG_MTRX,           //DEBUG Toggle Matrix Prints
     DBG_KBD,            //DEBUG Toggle Keyboard Prints
@@ -41,7 +43,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         L_T_BR,  L_PSD,   L_BRI,   L_PSI,   KC_TRNS, KC_TRNS, KC_TRNS, U_T_AUTO,U_T_AGCR,KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_MPRV, KC_MNXT, KC_VOLD, \
         L_T_PTD, L_PTP,   L_BRD,   L_PTN,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, \
         KC_TRNS, L_T_MD,  L_T_ONF, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, L_MODE,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                              KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS, KC_TRNS, KC_TRNS \
+        KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            L_KFSD, KC_TRNS, L_KFSI \
     ),
     /*
     [X] = LAYOUT(
@@ -94,6 +96,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             uint16_t scan_code = record->event.key.row * 15 + record->event.key.col;
             // we can just modify the read_buffer, since the LEDs are set
             // from read buffer and the led job then fills the write buffer.
+            // we also set a brightness array as we don't need to interpolate for keypress fade
+            desired_brightness[scan_code] = 1.0f;
             desired_interpolation[read_buffer][scan_code] = 1.0f;
             desired_interpolation[write_buffer][scan_code] = 1.0f;
             if(debug_enable) {
@@ -239,6 +243,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 CDC_print("Debug mouse ");
                 CDC_print(debug_mouse ? "enabled" : "disabled");
                 CDC_print("\r\n");
+            }
+            return false;
+        case L_KFSI:
+            if (record->event.pressed) {
+                led_keypress_fade_speed += KEY_PRESS_FADE_STEP;
+            }
+            return false;
+        case L_KFSD:
+            if (record->event.pressed) {
+                led_keypress_fade_speed -= KEY_PRESS_FADE_STEP;
+                if (led_keypress_fade_speed < 0.0005) led_keypress_fade_speed = 0.0005;
             }
             return false;
         default:

@@ -132,6 +132,12 @@ led_setup_t led_reactive_salmon_teal[] = {
   { .end = 1 }
 };
 
+led_setup_t leds_press_white[] = {
+    { .hs = 0, .he = 100, .rs = 0, .re = 0, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 0, .he = 100, .rs = 255, .re = 255, .gs = 255, .ge = 255, .bs = 255, .be = 255, .ef = EF_PRESS },
+    { .end = 1 },
+};
+
 
 //Add new LED animations here using one from above as example
 //The last entry must be { .end = 1 }
@@ -151,6 +157,7 @@ void *led_setups[] = {
     leds_white,
     leds_white_with_red_stripe,
     leds_black_with_red_stripe,
+    leds_press_white,
     led_reactive_salmon_teal,
     led_reactive_salmon_black,
     led_reactive_black_salmon,
