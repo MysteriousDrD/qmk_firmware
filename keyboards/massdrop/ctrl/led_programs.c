@@ -157,6 +157,7 @@ led_setup_t leds_press_yellow_red[] = {
 //Add the new animation name to the list below following its format
 
 void *led_setups[] = {
+    leds_black_with_red_stripe,
     leds_purple,
     leds_rainbow_s,
     leds_rainbow_ns,
@@ -169,7 +170,6 @@ void *led_setups[] = {
     leds_blue,
     leds_white,
     leds_white_with_red_stripe,
-    leds_black_with_red_stripe,
     leds_press_white,
     leds_white_press_purple,
     leds_press_yellow_red,

@@ -254,7 +254,7 @@ uint8_t led_lighting_mode;
 issi3733_led_t *led_cur;
 uint8_t led_per_run = 15;
 float breathe_mult;
-uint8_t led_anim_mode = 1;
+uint8_t led_anim_mode = 0;
 
 // this has far more entries than it needs, but it's far easier to linearize
 // that way. The higest scan code seems to be 156 as seen in config_led.h
@@ -364,6 +364,8 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     uint8_t l_scan = scan;
     // if we're on the higher row of wiring (basically the right)
     // side of the keyboard, we need to jump down a row
+    uint8_t up_scan = scan;
+    uint8_t dn_scan = scan;
     switch(scan) {
       case 154: // left arrow key -> ctrl
         r_scan = 82;
@@ -373,6 +375,7 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
         break;
       case 140: // up arrow -> shift
         r_scan = 153;
+        up_scan = 141;
         break;
       case 153: // shift -> up arrow
         l_scan = 140;
@@ -385,14 +388,30 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
         break;
       case 127: // end -> pgdn
         l_scan = 141;
+        up_scan = 112;
         break;
       case 141: // pgdn -> end
         r_scan = 127;
+        up_scan = 142;
+        dn_scan = 156;
         break;
+      case 156: //right arrow
+        up_scan = 141;
+        break;
+      case 155: //down arrow
+        l_scan  = 154;
       default:
         // if we're on the higher row of wiring (basically the right)
         // side of the keyboard, we need to jump down a row
-
+        if (scan > 7 && (scan < 90 || scan > 97)){
+          up_scan -= 15;
+        }
+        if (scan < 150 && (scan < 75 || scan > 82)){
+          dn_scan += 15;
+        }
+        if( (scan+83) % 15 == 0 && (scan+83) >= 90) {
+            l_scan += 83;
+        }
         if(scan % 15 == 0 && scan >= 90) {
             r_scan -= 83;
         }
@@ -400,14 +419,15 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
             r_scan -= 1;
             l_scan += 1;
         }
-        else{ // the remaining case here would be on the left most position so we jump up a row,
-
+        else{ // the remaining case here would be on the left most position
         }
       }
 
     // get your neighbours interpolation
     float r_value = desired_interpolation[read_buffer][r_scan];
     float l_value = desired_interpolation[read_buffer][l_scan];
+    float up_value = desired_interpolation[read_buffer][up_scan];
+    float dn_value = desired_interpolation[read_buffer][dn_scan];
     // now fill yourself up
     value = max(r_value * 0.85f, value);
     // calculate a new interpolation step
@@ -422,6 +442,18 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     // calculate a new interpolation step
     desired_interpolation[write_buffer][scan] = value - 0.15f * value;
 
+    value = max(up_value * 0.85f, value);
+    // calculate a new interpolation step
+    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+
+    // Act on LED
+    rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
+    rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
+    rgb_out[2] = (f[0].bs) + value * (f[0].be - f[0].bs);
+
+    value = max(dn_value * 0.85f, value);
+    // calculate a new interpolation step
+    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
     // Act on LED
     rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
     rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
