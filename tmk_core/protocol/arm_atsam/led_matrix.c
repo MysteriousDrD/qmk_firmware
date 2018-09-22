@@ -364,42 +364,77 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     uint8_t l_scan = scan;
     // if we're on the higher row of wiring (basically the right)
     // side of the keyboard, we need to jump down a row
+    //l_scan is actually towards keyboard right and r_scan keyboard left
     uint8_t up_scan = scan;
     uint8_t dn_scan = scan;
     switch(scan) {
-      case 154: // left arrow key -> ctrl
-        r_scan = 82;
+      case 78: //spacebar
+        up_scan = 65;
+        l_scan += 1;
+        r_scan -= 1;
         break;
-      case 82: // ctrl -> left arrow key
+      case 79: //right alt
+        up_scan = 151;
+        l_scan += 1;
+        r_scan -= 1;
+        break;
+      case 80: //fn
+        up_scan = 152;
+        l_scan += 1;
+        r_scan -= 1;
+        break;
+      case 81: //menu
+        up_scan = 153;
+        l_scan += 1;
+        r_scan -= 1;
+        break;
+      case 82: // ctrl
+        up_scan = 153;
         l_scan = 154;
+        r_scan -= 1;
         break;
-      case 140: // up arrow -> shift
-        r_scan = 153;
-        up_scan = 141;
-        break;
-      case 153: // shift -> up arrow
+      case 153: // shift
+        up_scan = 139;
+        dn_scan = 82;
         l_scan = 140;
+        r_scan = 152;
         break;
-      case 112: // home -> pgup
+      case 112: // home
+       up_scan = 96;
+       dn_scan = 127;
        l_scan = 142;
+       r_scan -= 1;
        break;
-      case 142: // pgup -> home
+      case 142: // pgup
+        up_scan = 97;
+        dn_scan = 156;
         r_scan = 112;
         break;
-      case 127: // end -> pgdn
-        l_scan = 141;
+      case 127: // end
         up_scan = 112;
+        dn_scan = 140;
+        l_scan = 141;
+        r_scan -= 1;
         break;
-      case 141: // pgdn -> end
-        r_scan = 127;
+      case 141: // pgdn
         up_scan = 142;
         dn_scan = 156;
+        r_scan = 127;
+        break;
+      case 140: // up arrow
+        up_scan = 127;
+        dn_scan = 155;
+        r_scan = 153;
+        break;
+      case 154: // left arrow key
+        up_scan = 126;
+        r_scan = 82;
+        l_scan = 155;
         break;
       case 156: //right arrow
         up_scan = 141;
+        r_scan  = 155;
         break;
-      case 155: //down arrow
-        l_scan  = 154;
       default:
         // if we're on the higher row of wiring (basically the right)
         // side of the keyboard, we need to jump down a row
