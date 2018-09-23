@@ -356,6 +356,9 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     if(scan == 255) {
         scan = 0;
     }
+    if(scan < 0){
+        scan = 0;
+    }
     float value = desired_interpolation[read_buffer][scan];
 
     // the scan point to the left of this position
@@ -455,6 +458,7 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
             l_scan += 1;
         }
         else{ // the remaining case here would be on the left most position
+            l_scan +=1;
         }
       }
 
@@ -465,6 +469,7 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     float dn_value = desired_interpolation[read_buffer][dn_scan];
     // now fill yourself up
     value = max(r_value * 0.85f, value);
+
     // calculate a new interpolation step
     desired_interpolation[write_buffer][scan] = value - 0.15f * value;
 
