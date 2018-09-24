@@ -46,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define BREATHE_MIN_STEP            0
 #define BREATHE_MAX_STEP            255
 #define KEY_PRESS_FADE_STEP         .0015
+#define REACT_FADE_STEP             .01
 
 //LED Mapping - More practically generated from a spreadsheet program
 //id: ID of the LED (Sync with PCB callouts)

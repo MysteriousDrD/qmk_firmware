@@ -241,6 +241,7 @@ void led_matrix_prepare(void)
 uint8_t led_enabled;
 float led_animation_speed;
 float led_keypress_fade_speed;
+float led_react_speed;
 uint8_t led_animation_direction;
 uint8_t led_animation_breathing;
 uint8_t led_animation_breathe_cur;
@@ -471,7 +472,7 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
     value = max(r_value * 0.85f, value);
 
     // calculate a new interpolation step
-    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+    desired_interpolation[write_buffer][scan] = value - led_react_speed * value;
 
     // Act on LED
     rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
@@ -480,11 +481,16 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
 
     value = max(l_value * 0.85f, value);
     // calculate a new interpolation step
-    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+    desired_interpolation[write_buffer][scan] = value - led_react_speed * value;
+
+    // Act on LED
+    rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
+    rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
+    rgb_out[2] = (f[0].bs) + value * (f[0].be - f[0].bs);
 
     value = max(up_value * 0.85f, value);
     // calculate a new interpolation step
-    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+    desired_interpolation[write_buffer][scan] = value - led_react_speed * value;
 
     // Act on LED
     rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
@@ -493,7 +499,7 @@ void led_react_op(uint8_t fcur, uint8_t fmax, uint8_t scan, led_setup_t *f, floa
 
     value = max(dn_value * 0.85f, value);
     // calculate a new interpolation step
-    desired_interpolation[write_buffer][scan] = value - 0.15f * value;
+    desired_interpolation[write_buffer][scan] = value - led_react_speed * value;
     // Act on LED
     rgb_out[0] = (f[0].rs) + value * (f[0].re - f[0].rs);
     rgb_out[1] = (f[0].gs) + value * (f[0].ge - f[0].gs);
@@ -655,6 +661,7 @@ uint8_t led_matrix_init(void)
     breathe_step = 1;
     breathe_dir = 1;
     led_keypress_fade_speed = 0.0300f;
+    led_react_speed = 0.15f;
 
     gcr_min_counter = 0;
     v_5v_cat_hit = 0;

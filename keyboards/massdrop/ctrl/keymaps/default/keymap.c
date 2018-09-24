@@ -18,6 +18,8 @@ enum alt67_keycodes {
     U_T_AGCR,           //USB Toggle Automatic GCR control
     L_KFSI,             // LED keypress fade increase
     L_KFSD,             // LED keypress fade decrease
+    L_RI,               // LED reactive fade increase
+    L_RD,               // LED reactive fade decrease
     DBG_TOG,            //DEBUG Toggle On / Off
     DBG_MTRX,           //DEBUG Toggle Matrix Prints
     DBG_KBD,            //DEBUG Toggle Keyboard Prints
@@ -42,8 +44,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_MPLY, KC_MSTP, KC_VOLU, \
         L_T_BR,  L_PSD,   L_BRI,   L_PSI,   KC_TRNS, KC_TRNS, KC_TRNS, U_T_AUTO,U_T_AGCR,KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,   KC_MPRV, KC_MNXT, KC_VOLD, \
         L_T_PTD, L_PTP,   L_BRD,   L_PTN,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, \
-        KC_TRNS, L_T_MD,  L_T_ONF, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, L_MODE,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                              KC_TRNS, \
-        KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            L_KFSD, KC_TRNS, L_KFSI \
+        KC_TRNS, L_T_MD,  L_T_ONF, KC_TRNS, KC_TRNS, KC_TRNS, TG_NKRO, L_MODE,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                              L_RI, \
+        KC_TRNS, KC_TRNS, KC_TRNS,                  KC_TRNS,                             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            L_KFSD, L_RD, L_KFSI \
     ),
     /*
     [X] = LAYOUT(
@@ -255,6 +257,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 led_keypress_fade_speed -= KEY_PRESS_FADE_STEP;
                 if (led_keypress_fade_speed < 0.0005) led_keypress_fade_speed = 0.0005;
             }
+            case L_RI:
+                if (record->event.pressed) {
+                    led_react_speed += REACT_FADE_STEP;
+                }
+                return false;
+            case L_RD:
+                if (record->event.pressed) {
+                    led_react_speed -= REACT_FADE_STEP;
+                    if (led_react_speed < 0.01) led_react_speed = 0.01;
+                }
             return false;
         default:
             return true; //Process all other keycodes normally

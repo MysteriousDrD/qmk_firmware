@@ -150,6 +150,11 @@ led_setup_t leds_press_yellow_red[] = {
     { .end = 1 },
 };
 
+led_setup_t leds_reactive_white_green[] = {
+  { .hs = 0, .he = 100, .rs = 255, .gs = 255, .bs = 255, .re = 0, .ge = 255, .be = 0, .ef = EF_REACT},
+  { .end = 1 }
+};
+
 
 
 //Add new LED animations here using one from above as example
@@ -158,6 +163,7 @@ led_setup_t leds_press_yellow_red[] = {
 
 void *led_setups[] = {
     leds_black_with_red_stripe,
+    leds_reactive_white_green,
     leds_purple,
     leds_rainbow_s,
     leds_rainbow_ns,

@@ -133,6 +133,7 @@ extern uint8_t led_animation_id;
 extern uint8_t led_enabled;
 extern float led_animation_speed;
 extern float led_keypress_fade_speed;
+extern float led_react_speed;
 extern uint8_t led_lighting_mode;
 extern uint8_t led_animation_direction;
 extern uint8_t led_animation_breathing;
