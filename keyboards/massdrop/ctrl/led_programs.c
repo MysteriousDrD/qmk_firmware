@@ -138,6 +138,24 @@ led_setup_t leds_press_white[] = {
     { .end = 1 },
 };
 
+led_setup_t leds_press_red[] = {
+    { .hs = 0, .he = 1, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 8.33, .he = 9, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 17.11, .he = 17.33, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 25.33, .he = 25.67, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 33.33, .he = 33.67, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 41.67, .he = 41.9, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 49, .he = 49.99, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 58.11, .he = 58.22, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 66.33, .he = 66.67, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 74, .he = 75, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 82, .he = 83, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 91, .he = 91.67, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 99, .he = 100, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_NONE },
+    { .hs = 0, .he = 100, .rs = 255, .re = 255, .gs = 0, .ge = 0, .bs = 0, .be = 0, .ef = EF_PRESS },
+    { .end = 1 },
+};
+
 led_setup_t leds_white_press_purple[] = {
     { .hs = 0, .he = 100, .rs = 255, .re = 255, .gs = 255, .ge = 255, .bs = 255, .be = 255, .ef = EF_NONE },
     { .hs = 0,  .he = 100,  .rs = 105,   .re = 105, .gs = 255,   .ge = 255,   .bs = 0, .be = 0, .ef = EF_PRESS | EF_SUBTRACT },
@@ -177,6 +195,7 @@ void *led_setups[] = {
     leds_white,
     leds_white_with_red_stripe,
     leds_press_white,
+    leds_press_red,
     leds_white_press_purple,
     leds_press_yellow_red,
     led_reactive_salmon_teal,
